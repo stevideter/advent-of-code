@@ -7,16 +7,19 @@ fs.readFile('./calorie-count-input.txt', 'utf8', (err, data) => {
     }
     const input = data.split('\n');
     let elfCalories = 0;
-    let maxElfCalores = 0;
+    let topThree = [0, 0, 0];
     input.forEach((i) => {
         if (!i) {
-            if (elfCalories > maxElfCalores) {
-                maxElfCalores = elfCalories;
-            }
+            topThree.push(elfCalories);
+            topThree = topThree.sort((a, b) => b - a).slice(0, 3);
             elfCalories = 0;
         } else {
             elfCalories += parseInt(i);
         }
     });
-    console.log(JSON.stringify({ maxElfCalores }));
+    const sumWithInitial = topThree.reduce(
+        (accumulator, currentValue) => accumulator + currentValue,
+        0
+    );
+    console.log(JSON.stringify({ topThree, sumWithInitial }));
 });
