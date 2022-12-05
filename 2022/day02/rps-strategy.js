@@ -7,73 +7,47 @@ const fs = require('fs');
 // Rock defeats Scissors, Scissors defeats Paper, and Paper defeats Rock. If both players choose the same shape, the round instead ends in a draw.
 const WIN = 6;
 const DRAW = 3;
-
+const LOSE = 0;
+const OPPONENT_ROCK = 'A';
 const OPPONENT_PAPER = 'B';
 const OPPONENT_SCISSORS = 'C';
-
-const SELF_DRAW = 'Y';
-const SELF_WIN = 'Z';
-
 const ROCK_SCORE = 1;
 const PAPER_SCORE = 2;
 const SCISSORS_SCORE = 3;
 
-function win(opponent) {
-    console.log('WIN');
-    if (opponent === OPPONENT_SCISSORS) {
-        return WIN + ROCK_SCORE;
-    }
-    if (opponent === OPPONENT_PAPER) {
-        return WIN + SCISSORS_SCORE;
-    }
-    return WIN + PAPER_SCORE;
-}
-function draw(opponent) {
-    console.log('DRAW');
+const LOSE_STRATEGY = {
+    strategy: 'X',
+    score: LOSE,
+    cardScore: {
+        [OPPONENT_PAPER]: ROCK_SCORE,
+        [OPPONENT_SCISSORS]: PAPER_SCORE,
+        [OPPONENT_ROCK]: SCISSORS_SCORE,
+    },
+};
+const DRAW_STRATEGY = {
+    strategy: 'Y',
+    score: DRAW,
+    cardScore: {
+        [OPPONENT_PAPER]: PAPER_SCORE,
+        [OPPONENT_SCISSORS]: SCISSORS_SCORE,
+        [OPPONENT_ROCK]: ROCK_SCORE,
+    },
+};
 
-    if (opponent === OPPONENT_SCISSORS) {
-        return DRAW + SCISSORS_SCORE;
-    }
-    if (opponent === OPPONENT_PAPER) {
-        return DRAW + PAPER_SCORE;
-    }
-    return DRAW + ROCK_SCORE;
-}
-
-function lose(opponent) {
-    console.log('LOSE');
-
-    if (opponent === OPPONENT_SCISSORS) {
-        return PAPER_SCORE;
-    }
-    if (opponent === OPPONENT_PAPER) {
-        return ROCK_SCORE;
-    }
-    return SCISSORS_SCORE;
-}
+const WIN_STRATEGY = {
+    strategy: 'Z',
+    score: WIN,
+    cardScore: {
+        [OPPONENT_PAPER]: SCISSORS_SCORE,
+        [OPPONENT_SCISSORS]: ROCK_SCORE,
+        [OPPONENT_ROCK]: PAPER_SCORE,
+    },
+};
+const strategies = [WIN_STRATEGY, LOSE_STRATEGY, DRAW_STRATEGY];
 
 function score(opponent, self) {
-    let outcome = 0;
-    if (self === SELF_WIN) {
-        const score = win(opponent);
-        console.log(
-            `For opponent ${opponent} and self ${self} WIN! score is ${score} `
-        );
-        outcome += score;
-    } else if (self === SELF_DRAW) {
-        const score = draw(opponent);
-        console.log(
-            `For opponent ${opponent} and self ${self} DRAW! score is ${score} `
-        );
-        outcome += score;
-    } else {
-        const score = lose(opponent);
-        console.log(
-            `For opponent ${opponent} and self ${self} LOSE! score is ${score} `
-        );
-        outcome += score;
-    }
-    return outcome;
+    const strategy = strategies.find((str) => str.strategy === self);
+    return strategy.cardScore[opponent] + strategy.score;
 }
 
 fs.readFile('./strategy-guide.txt', 'utf8', (err, data) => {
