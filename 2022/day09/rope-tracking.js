@@ -1,8 +1,9 @@
 const fs = require('fs');
+const { exit } = require('process');
 
 const bridge = [];
-const INITIAL_HEIGHT = 5;
-const INITIAL_WIDTH = 6;
+const INITIAL_HEIGHT = 500;
+const INITIAL_WIDTH = 500;
 const MOVE_TYPE = {
     RIGHT: 'R',
     LEFT: 'L',
@@ -14,8 +15,8 @@ const visitedSet = new Set();
 let currentHeight = INITIAL_HEIGHT;
 let currentWidth = INITIAL_WIDTH;
 let state = {
-    H: { x: 0, y: 0 },
-    T: { x: 0, y: 0 },
+    H: { x: INITIAL_WIDTH / 2, y: INITIAL_HEIGHT / 2 },
+    T: { x: INITIAL_WIDTH / 2, y: INITIAL_HEIGHT / 2 },
 };
 function printBridge() {
     for (let yAxis = currentHeight - 1; yAxis > -1; yAxis--) {
@@ -39,25 +40,13 @@ function printBridge() {
     console.log('\n');
 }
 
-function updateHeight(additionalRows) {
-    currentHeight = currentHeight + additionalRows;
-    while (bridge.length < currentHeight) {
-        bridge.push(Array(currentWidth).fill('.'));
-    }
-}
-function updateWidth(additionalColumns) {
-    currentWidth = currentWidth + additionalColumns;
-    bridge.forEach((row) => {
-        row.push(...Array(additionalColumns).fill('.'));
-    });
-}
 function initializeBridge() {
     for (let i = 0; i < INITIAL_HEIGHT; i++) {
         bridge.push(Array(INITIAL_WIDTH).fill('.'));
     }
     moveTail();
-    visitedSet.add('0,0');
-    printBridge();
+    visitedSet.add(`${state.T.x},${state.T.y}`);
+    //    printBridge();
 }
 function calcDistance({ H, T }) {
     const diffX = H.x - T.x;
@@ -110,20 +99,19 @@ function moveTail(direction) {
     visitedSet.add(`${T.y},${T.x}`);
 }
 function moveMarkers(x, y, direction) {
+    if (x < 0 || y < 0) {
+        throw new Error('out of range');
+    }
     const { H, T } = state;
     H.x = x;
     H.y = y;
     moveTail(direction);
-    printBridge();
+    // printBridge();
 }
 function moveRight(move) {
     // console.log(move);
     const { steps, direction } = move;
     const { H, T } = state;
-    const widthNeeded = steps + H.x + 1;
-    if (widthNeeded > currentWidth) {
-        updateWidth(widthNeeded - currentWidth);
-    }
     for (let i = 1; i <= steps; i++) {
         moveMarkers(H.x + 1, H.y, direction);
     }
@@ -140,10 +128,6 @@ function moveUp(move) {
     // console.log(move);
     const { steps, direction } = move;
     const { H, T } = state;
-    const heightNeeded = steps + H.y + 1;
-    if (heightNeeded > currentHeight) {
-        updateHeight(heightNeeded - currentHeight);
-    }
     for (let i = 1; i <= steps; i++) {
         moveMarkers(H.x, H.y + 1, direction);
     }
@@ -189,8 +173,16 @@ fs.readFile(`${__dirname}/moves.txt`, 'utf8', (err, data) => {
             steps: parseInt(move[1]),
         });
     });
-    moves.forEach((move) => {
-        doMove(move);
+    moves.forEach((move, index) => {
+        try {
+            doMove(move);
+        } catch (err) {
+            console.log(err);
+            console.log(`failed at ${index}`);
+            exit(1);
+        }
     });
-    console.log(visitedSet);
+    console.log(visitedSet.size);
+    // console.log(visitedSet);
+    // printBridge();
 });
